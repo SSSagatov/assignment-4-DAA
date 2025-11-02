@@ -2,97 +2,93 @@ package graph.scc;
 
 import java.util.*;
 
+/**
+ * Алгоритм Тарьяна для нахождения сильносвязных компонент.
+ */
 public class SCCFinder {
     private final List<List<Integer>> graph;
-    private int time;
-    private int[] disc, low;
-    private boolean[] inStack;
+    private final int n;
+
+    private int time = 0;
+    private int[] disc;
+    private int[] low;
+    private boolean[] stackMember;
     private Deque<Integer> stack;
-    private List<List<Integer>> sccList;
+    private List<List<Integer>> sccs;
 
     public SCCFinder(List<List<Integer>> graph) {
         this.graph = graph;
-        int n = graph.size();
-        disc = new int[n];
-        Arrays.fill(disc, -1);
-        low = new int[n];
-        inStack = new boolean[n];
-        stack = new ArrayDeque<>();
-        sccList = new ArrayList<>();
-        time = 0;
+        this.n = graph.size();
     }
 
     public List<List<Integer>> findSCCs() {
-        for (int i = 0; i < graph.size(); i++) {
+        time = 0;
+        disc = new int[n];
+        low = new int[n];
+        stackMember = new boolean[n];
+        stack = new ArrayDeque<>();
+        sccs = new ArrayList<>();
+
+        Arrays.fill(disc, -1);
+        Arrays.fill(low, -1);
+
+        for (int i = 0; i < n; i++) {
             if (disc[i] == -1) {
                 dfs(i);
             }
         }
-        return sccList;
+        return sccs;
     }
 
     private void dfs(int u) {
         disc[u] = low[u] = time++;
         stack.push(u);
-        inStack[u] = true;
+        stackMember[u] = true;
 
         for (int v : graph.get(u)) {
             if (disc[v] == -1) {
                 dfs(v);
                 low[u] = Math.min(low[u], low[v]);
-            } else if (inStack[v]) {
+            } else if (stackMember[v]) {
                 low[u] = Math.min(low[u], disc[v]);
             }
         }
 
         if (low[u] == disc[u]) {
-            List<Integer> component = new ArrayList<>();
-            while (true) {
-                int v = stack.pop();
-                inStack[v] = false;
-                component.add(v);
-                if (v == u) break;
-            }
-            sccList.add(component);
+            List<Integer> scc = new ArrayList<>();
+            int w;
+            do {
+                w = stack.pop();
+                stackMember[w] = false;
+                scc.add(w);
+            } while (w != u);
+            sccs.add(scc);
         }
     }
 
-    // конструирует конденсационный граф из SCC
     public List<List<Integer>> buildCondensationGraph() {
-        List<List<Integer>> condensation;
-        int n = graph.size();
-        // Маппинг вершины к компоненте SCC
-        int[] sccId = new int[n];
-        Arrays.fill(sccId, -1);
-        for (int i = 0; i < sccList.size(); i++) {
+        List<List<Integer>> sccList = findSCCs();
+        int compCount = sccList.size();
+        int[] compId = new int[n];
+        for (int i = 0; i < compCount; i++) {
             for (int v : sccList.get(i)) {
-                sccId[v] = i;
+                compId[v] = i;
             }
         }
-        condensation = new ArrayList<>();
-        for (int i = 0; i < sccList.size(); i++) condensation.add(new ArrayList<>());
+        Set<Integer>[] adj = new HashSet[compCount];
+        for (int i = 0; i < compCount; i++) adj[i] = new HashSet<>();
+
         for (int u = 0; u < n; u++) {
             for (int v : graph.get(u)) {
-                int cu = sccId[u], cv = sccId[v];
-                if (cu != cv) {
-                    condensation.get(cu).add(cv);
+                if (compId[u] != compId[v]) {
+                    adj[compId[u]].add(compId[v]);
                 }
             }
         }
-        // Можно удалить дубликаты ребер, если надо
-        for (List<Integer> edges : condensation) {
-            Set<Integer> set = new HashSet<>(edges);
-            edges.clear();
-            edges.addAll(set);
+        List<List<Integer>> condensation = new ArrayList<>();
+        for (Set<Integer> set : adj) {
+            condensation.add(new ArrayList<>(set));
         }
         return condensation;
-    }
-
-    public List<Integer> getSccSizes() {
-        List<Integer> sizes = new ArrayList<>();
-        for (List<Integer> comp : sccList) {
-            sizes.add(comp.size());
-        }
-        return sizes;
     }
 }
