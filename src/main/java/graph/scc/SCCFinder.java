@@ -45,7 +45,6 @@ public class SCCFinder {
             }
         }
 
-        // root of SCC
         if (low[u] == disc[u]) {
             List<Integer> component = new ArrayList<>();
             while (true) {
