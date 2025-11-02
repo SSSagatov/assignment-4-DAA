@@ -1,0 +1,25 @@
+{
+  "results": [
+    {
+      "datasetName": "small1",
+      "sccCount": 6,
+      "maxSccSize": 1,
+      "topoOrderSize": 6,
+      "longestPathLength": -2147483648
+    },
+    {
+      "datasetName": "medium1",
+      "sccCount": 15,
+      "maxSccSize": 1,
+      "topoOrderSize": 15,
+      "longestPathLength": -2147483648
+    },
+    {
+      "datasetName": "large1",
+      "sccCount": 35,
+      "maxSccSize": 1,
+      "topoOrderSize": 35,
+      "longestPathLength": -2147483648
+    }
+  ]
+}
